@@ -1,0 +1,15 @@
+/* src/components/Login.css */
+.login-page {
+    text-align: center;
+    margin-top: 50px;
+  }
+  
+/* src/components/Login.css */
+
+button {
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+}
+
+  

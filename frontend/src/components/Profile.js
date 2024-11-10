@@ -27,11 +27,9 @@ function Profile() {
   if (!user) return <p>User not authenticated</p>;
 
   return (
-    <div>
-      <h1>User Profile</h1>
-      <p><strong>Name:</strong> {user.nickname || user.name}</p>
-      <p><strong>Email:</strong> {user.email}</p>
-      {/* Display other fields from the decoded token if available */}
+    <div className="card">
+      <h2>Welcome to the Profile Page</h2>
+      <p>This is where user information will be displayed.</p>
     </div>
   );
 }

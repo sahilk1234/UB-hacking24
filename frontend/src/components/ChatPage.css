@@ -1,0 +1,17 @@
+/* src/components/ChatPage.css */
+
+.chat-page-container {
+    display: flex;
+    height: 100vh;
+    background-color: #f0f2f5;
+  }
+  
+  .main-content {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-color: #f6f6f8;
+  }
+  
