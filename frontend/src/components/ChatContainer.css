@@ -1,0 +1,13 @@
+.chat-center-container {
+    display: flex;
+    flex-direction: column;
+    width: 60%;  /* Width for centering the chat UI */
+    max-width: 800px;
+    margin: 0 auto;
+    height: 100vh;
+    background-color: #36393f;
+    color: #ffffff;
+    overflow-y: auto;
+    border-radius: 10px;
+  }
+  
