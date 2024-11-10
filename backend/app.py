@@ -1,5 +1,5 @@
-from flask import Flask, request, jsonify, session
-from auth0 import auth_required, auth0, init_auth0
+from flask import Flask, request, jsonify, session, redirect, url_for
+from auth0 import auth_required, init_auth0, auth0  # Ensure auth0 is imported
 from db import mongo, init_db
 from symptom import get_possible_conditions
 from chatbot import get_diagnosis
@@ -10,7 +10,7 @@ app.config["MONGO_URI"] = "mongodb+srv://sgupta98mnit:O3T9ILZQZR4KW4V7@cluster0.
 
 # Initialize database and Auth0
 init_db(app)
-init_auth0(app)
+auth0 = init_auth0(app)  # This should initialize the global auth0 variable
 
 # Routes
 @app.route('/symptom_checker', methods=['POST'])
@@ -31,17 +31,17 @@ def chatbot():
 @auth_required
 def user_profile():
     user = mongo.db.users.find_one({"user_id": session["user_id"]})
-    return jsonify(user)
+    return jsonify(user) if user else jsonify({"error": "User not found"}), 404
 
 @app.route('/login')
 def login():
-    return auth0.authorize_redirect(redirect_uri='http://localhost:5000/callback')
+    return auth0.authorize_redirect(redirect_uri=url_for('callback', _external=True))
 
 @app.route('/callback')
 def callback():
-    auth0.authorize_access_token()
-    session['user_id'] = auth0.get('userinfo')['sub']
-    return "Logged in successfully!"
+    token = auth0.authorize_access_token()
+    session["user"] = token
+    return redirect("/")
 
 if __name__ == "__main__":
     app.run(debug=True)
