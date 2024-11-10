@@ -16,7 +16,7 @@ def init_db():
         cur.execute("""
             CREATE TABLE IF NOT EXISTS conversations (
                 chat_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                user_uuid UUID NOT NULL,  -- Stores UUID to identify the user without needing a users table
+                user_uuid VARCHAR(255) NOT NULL,
                 started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 conversation_name VARCHAR(255),
                 ended_at TIMESTAMP

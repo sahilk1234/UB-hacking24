@@ -1,4 +1,5 @@
-import datetime
+from datetime import datetime
+import traceback
 import uuid
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -8,6 +9,8 @@ from auth0 import auth_required, init_auth0, auth0  # Ensure auth0 is imported
 from db import init_db, get_db_connection
 from symptom import get_possible_conditions
 from chatbot import get_diagnosis
+from flask_cors import CORS
+
 
 from os import environ as env
 from dotenv import find_dotenv, load_dotenv
@@ -19,22 +22,25 @@ if ENV_FILE:
     load_dotenv(ENV_FILE)
 
 app = Flask(__name__)
-
+app.config["DEBUG"] = True
+CORS(app)  # This will allow all origins by default
 # Initialize database and Auth0
 init_db()
 auth0 = init_auth0(app)
-
+print("Hisa")
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config["SECRET_KEY"] = env.get("0b43551f68bfbe8e09894719197eeec3db967be9e746cba7ab20a79cfbc64058")
 
 
 Session(app)
+
 @app.route('/start_chat', methods=['POST'])
-@auth_required
+# @auth_required
 def start_chat():
     """
     Initiates a new chat session by generating a unique chat_id.
     """
+
     user_id = request.json.get("userId", "")
     if not user_id:
         return jsonify({"error": "User not authenticated"}), 401
@@ -43,6 +49,8 @@ def start_chat():
     chat_id = str(uuid.uuid4())
 
     # Insert the new conversation into the database
+    current_time = datetime.now()
+
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cur:
@@ -51,12 +59,13 @@ def start_chat():
                     INSERT INTO conversations (chat_id, user_uuid, conversation_name, started_at)
                     VALUES (%s, %s, %s, %s);
                     """,
-                    (chat_id, user_id, "", datetime.now())
+                    (chat_id, user_id, "", current_time)
                 )
                 conn.commit()
-        return jsonify({"chat_id": chat_id})
+        return jsonify({"chatId": chat_id})
 
     except Exception as e:
+        print(e)
         print(f"Error starting chat: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
@@ -66,6 +75,8 @@ def chat():
     Handles interactive chat requests by taking user input, generating a response,
     and logging the conversation to the database with chat_id.
     """
+    print("stat")
+
     message_input = request.json.get("messageInput", "")
     chat_id = request.json.get("chatId", "")
 
@@ -74,48 +85,50 @@ def chat():
 
     try:
         # Generate a diagnosis or response based on the user input
-        response_text = get_diagnosis(message_input)
-
+        print("stat")
+        response_text = get_diagnosis(message_input,[])
+        # response_text="Please provide more info"
         # Store message in the database
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                # Check if it's the first message of the conversation to set the name
-                cur.execute(
-                    "SELECT COUNT(*) FROM messages WHERE chat_id = %s",
-                    (chat_id,)
-                )
-                message_count = cur.fetchone()[0]
+        # with get_db_connection() as conn:
+        #     with conn.cursor() as cur:
+        #         # Check if it's the first message of the conversation to set the name
+        #         cur.execute(
+        #             "SELECT COUNT(*) FROM messages WHERE chat_id = %s",
+        #             (chat_id,)
+        #         )
+        #         message_count = cur.fetchone()[0]
 
-                # If this is the first message, update conversation name
-                if message_count == 0:
-                    truncated_message = message_input[:50] + "..." if len(message_input) > 50 else message_input
-                    cur.execute(
-                        "UPDATE conversations SET conversation_name = %s WHERE chat_id = %s",
-                        (truncated_message, chat_id)
-                    )
+        #         # If this is the first message, update conversation name
+        #         if message_count == 0:
+        #             truncated_message = message_input[:50] + "..." if len(message_input) > 50 else message_input
+        #             cur.execute(
+        #                 "UPDATE conversations SET conversation_name = %s WHERE chat_id = %s",
+        #                 (truncated_message, chat_id)
+        #             )
 
-                # Insert user's message and bot's response into the messages table
-                cur.execute(
-                    """
-                    INSERT INTO messages (chat_id, sender, message_text, diagnosis)
-                    VALUES (%s, %s, %s, %s);
-                    """,
-                    (chat_id, 'user', message_input, None)
-                )
-                cur.execute(
-                    """
-                    INSERT INTO messages (chat_id, sender, message_text, diagnosis)
-                    VALUES (%s, %s, %s, %s);
-                    """,
-                    (chat_id, 'bot', response_text, response_text)
-                )
-                conn.commit()
+        #         # Insert user's message and bot's response into the messages table
+        #         cur.execute(
+        #             """
+        #             INSERT INTO messages (chat_id, sender, message_text, diagnosis)
+        #             VALUES (%s, %s, %s, %s);
+        #             """,
+        #             (chat_id, 'user', message_input, None)
+        #         )
+        #         cur.execute(
+        #             """
+        #             INSERT INTO messages (chat_id, sender, message_text, diagnosis)
+        #             VALUES (%s, %s, %s, %s);
+        #             """,
+        #             (chat_id, 'bot', response_text, response_text)
+        #         )
+        #         conn.commit()
                 
         return jsonify({"response": response_text})
 
 
     except Exception as e:
         print(f"Error during chat handling: {e}")
+        traceback.print_exc()
         return jsonify({"error": "Internal server error"}), 500
 
 @app.route('/get_chat', methods=['GET'])

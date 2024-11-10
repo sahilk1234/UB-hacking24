@@ -1,29 +1,36 @@
-# chatbot.py
+import openai
+import os
+import traceback
+from openai import OpenAI
 
-from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
+client = OpenAI()
 
-# Load the pretrained model and tokenizer
-model_name = "distilgpt2"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name)
+# Ensure your OpenAI API key is loaded from an environment variable
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def get_diagnosis(user_input, conversation_history):
     """
-    Generates a diagnosis or response based on user input and conversation history.
-    Concatenates the conversation history with the current input for context.
+    Generates a response using the updated OpenAI Chat API.
     """
-    # Concatenate the conversation history and the new user input
-    full_input = " ".join(conversation_history + [user_input])
-    
-    # Tokenize the concatenated input and generate a response
-    inputs = tokenizer.encode(full_input, return_tensors="pt")
-    
-    # Generate a response from the model
-    with torch.no_grad():
-        outputs = model.generate(inputs, max_length=200, num_return_sequences=1, no_repeat_ngram_size=2)
+    baseString="Assume you are doctor. Answer the below question in short simple english and if you get any query other than medical field then don't reply \n"
+    # Prepare the conversation in the format required by the API
+    messages = [{"role": "system", "content": "You are a helpful assistant."}]
+    messages.extend({"role": "user", "content": msg} for msg in conversation_history)
+    messages.append({"role": "user", "content": baseString+user_input})
 
-    # Decode the generated response
-    response_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    
-    return response_text
+    try:
+        # Call the OpenAI Chat API
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages
+        )
+
+        # Access the content attribute directly
+        response_text = completion.choices[0].message.content
+
+        return response_text
+
+    except Exception as e:
+        print("Error during API call:", e)
+        traceback.print_exc()  # Print the full stack trace
+        return "I'm sorry, but I encountered an error."

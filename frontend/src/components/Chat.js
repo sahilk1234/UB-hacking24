@@ -1,32 +1,58 @@
-import React, { useEffect, useState, useRef } from 'react';
-import MessageInput from './MessageInput';
-import axios from '../services/api';
-import './Chat.css';
+import React, { useEffect, useState, useRef } from "react";
+import MessageInput from "./MessageInput";
+import axios from "../services/api";
+import "./Chat.css";
+import { useAuth } from "../context/AuthContext";
+import { CircularProgress } from "@mui/material";
 
-const Chat = ({ chatId }) => {
+const Chat = ({ chatId, onSelectChat }) => {
+  const { user } = useAuth();
   const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
   const chatEndRef = useRef(null);
 
   useEffect(() => {
     if (chatId) {
-      axios.get(`/get_chat?chatId=${chatId}`)
-        .then(response => setMessages(response.data.history))
-        .catch(error => console.error("Error fetching chat:", error));
+      axios
+        .get(`/get_chat?chatId=${chatId}`)
+        .then((response) => setMessages(response.data.history))
+        .catch((error) => console.error("Error fetching chat:", error));
     }
   }, [chatId]);
 
-  const sendMessage = (text) => {
-    if (chatId && text) {
-      axios.post('/check', { chatId, messageInput: text })
-        .then(response => {
-          setMessages(prevMessages => [
-            ...prevMessages,
-            { sender: 'user', message_text: text },
-            { sender: 'bot', message_text: response.data.response }
-          ]);
-          chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        })
-        .catch(error => console.error("Error sending message:", error));
+  const checkCall = async (chatId, text) => {
+    await axios
+      .post("/check", { chatId, messageInput: text })
+      .then((response) => {
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { sender: "user", message_text: text },
+          { sender: "bot", message_text: response.data.response },
+        ]);
+        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      })
+      .catch((error) => console.error("Error sending message:", error));
+  };
+
+  const sendMessage = async (text) => {
+    try {
+      setLoading(true);
+      if (chatId) {
+        if (text) {
+          await checkCall(chatId, text);
+        }
+      } else if (text) {
+        const res = await axios.post("/start_chat", {
+          userId: user.email,
+        });
+        console.log(res, "*****");
+        await checkCall(res.data.chatId, text);
+        onSelectChat(chatId);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,12 +67,13 @@ const Chat = ({ chatId }) => {
           messages.map((msg, index) => (
             <div key={index} className={`message ${msg.sender}`}>
               <p>{msg.message_text}</p>
-              <span className="timestamp">{new Date(msg.created_at).toLocaleTimeString()}</span>
             </div>
           ))
         )}
         <div ref={chatEndRef} />
       </div>
+      {loading && <CircularProgress color="primary" size={60} thickness={5} />}
+
       <MessageInput onSendMessage={sendMessage} />
     </div>
   );
