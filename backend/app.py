@@ -12,6 +12,11 @@ app.config["MONGO_URI"] = "mongodb+srv://sgupta98mnit:O3T9ILZQZR4KW4V7@cluster0.
 init_db(app)
 auth0 = init_auth0(app)
 
+
+
+app.config['SESSION_TYPE'] = 'filesystem'
+# Session(app)
+
 # Routes
 @app.route('/symptom_checker', methods=['POST'])
 @auth_required
@@ -41,9 +46,7 @@ def login():
 def callback():
     token = auth0.authorize_access_token()  # Exchange authorization code for a token
     session["user"] = token  # Store the token in session
-    
-    # Redirect to React frontend with token in URL or query params
-    return redirect("http://localhost:3000/profile?token=" + token['access_token'])
+    return redirect("http://localhost:3000/profile?token=" + token['id_token'])
 
 if __name__ == "__main__":
     app.run(debug=True)
