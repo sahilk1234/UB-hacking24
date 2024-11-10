@@ -1,21 +1,20 @@
 # frontend/Dockerfile
-# Use an official Node.js runtime as a parent image
 FROM node:16
 
-# Set the working directory to /app
+# Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json into the container
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install Node.js dependencies
+# Install dependencies
 RUN npm install
 
-# Copy the rest of the application code
+# Copy the rest of the app
 COPY . .
 
-# Expose port 3000 for React
+# Expose port 3000 for the React development server
 EXPOSE 3000
 
-# Run the command to start the React app
+# Start the React app in development mode
 CMD ["npm", "start"]

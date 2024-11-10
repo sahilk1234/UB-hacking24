@@ -8,10 +8,11 @@ function useQuery() {
 }
 
 function Profile() {
+  console.log('Hello')
   const { user, login } = useAuth();
   const query = useQuery();
   const token = query.get('token');
-
+  console.log(user)
   useEffect(() => {
     if (token) {
       try {

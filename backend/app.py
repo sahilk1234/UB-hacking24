@@ -9,6 +9,14 @@ from db import init_db, get_db_connection
 from symptom import get_possible_conditions
 from chatbot import get_diagnosis
 
+from os import environ as env
+from dotenv import find_dotenv, load_dotenv
+from flask import Flask
+from flask_session import Session
+
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
 
 app = Flask(__name__)
 
@@ -17,8 +25,10 @@ init_db()
 auth0 = init_auth0(app)
 
 app.config['SESSION_TYPE'] = 'filesystem'
+app.config["SECRET_KEY"] = env.get("0b43551f68bfbe8e09894719197eeec3db967be9e746cba7ab20a79cfbc64058")
 
-# Session(app)
+
+Session(app)
 @app.route('/start_chat', methods=['POST'])
 @auth_required
 def start_chat():

@@ -18,7 +18,7 @@ def init_db():
                 chat_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 user_uuid UUID NOT NULL,  -- Stores UUID to identify the user without needing a users table
                 started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                conversation_name VARCHAR(255);
+                conversation_name VARCHAR(255),
                 ended_at TIMESTAMP
             );
         """)

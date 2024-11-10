@@ -1,14 +1,22 @@
-# Dockerfile for Backend
+# backend/Dockerfile
+FROM python:3.10-slim
 
-FROM python:3.10
+# Set the working directory in the container
 WORKDIR /app
 
-# Install dependencies with specific NumPy version
+# Copy only requirements first for efficient caching
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
-# Copy the rest of your app code
-COPY . /app
+# Copy the rest of the app
+COPY . .
 
-# Run the Flask application
-CMD ["flask", "run", "--host=0.0.0.0"]
+# Expose port 5000
+EXPOSE 5000
+
+# Set environment variables for Flask
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=development
+
+# Run Flask with reload enabled
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5000", "--reload"]

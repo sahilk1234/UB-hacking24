@@ -10,7 +10,7 @@ services:
       FLASK_ENV: development
       DATABASE_URL: postgresql://postgres:postgres@db:5432/healthcare_chatbot
     volumes:
-      - ./backend:/app
+      - ./backend:/app  # Bind mount to enable hot-reloading
     depends_on:
       - db
     networks:
@@ -26,8 +26,8 @@ services:
     environment:
       NODE_ENV: development
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - ./frontend:/app  # Bind mount to enable hot-reloading
+      - /app/node_modules  # Prevent node_modules from being overwritten by the bind mount
     stdin_open: true
     tty: true
     networks:
