@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useAuth } from './AuthContext';
+import { useAuth } from '../context/AuthContext';
 import jwt_decode from 'jwt-decode';
 import { useLocation } from 'react-router-dom';
 
