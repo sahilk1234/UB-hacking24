@@ -1,17 +1,17 @@
+// src/components/ChatPage.js
 import React, { useState } from 'react';
 import ChatList from './ChatList';
-import Chat from './Chat';
-import Header from './Header';
+import ChatContainer from './ChatContainer'; // Using ChatContainer here
+import './ChatPage.css'; // Create a main CSS file for ChatPage layout
 
 function ChatPage() {
   const [selectedChatId, setSelectedChatId] = useState(null);
 
   return (
-    <div className="app-container">
+    <div className="chat-page-container">
       <ChatList onSelectChat={(chatId) => setSelectedChatId(chatId)} />
       <div className="main-content">
-        <Header />
-        <Chat chatId={selectedChatId} />
+        <ChatContainer chatId={selectedChatId} />
       </div>
     </div>
   );

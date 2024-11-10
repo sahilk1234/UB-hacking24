@@ -1,37 +1,47 @@
+// src/components/Profile.js
 import React, { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import jwt_decode from 'jwt-decode';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
 
 function Profile() {
-  console.log('Hello')
-  const { user, login } = useAuth();
+  const { user, login, loading } = useAuth();
+  const navigate = useNavigate();
   const query = useQuery();
   const token = query.get('token');
-  console.log(user)
+
   useEffect(() => {
     if (token) {
-      try {
-        jwt_decode(token);  // Validate the token format
-        login(token);       // Log in and set user in context
-      } catch (err) {
-        console.error("Invalid token format:", err);
-      }
+      login(token); // Only log in if there is a token in the URL query
     }
   }, [token, login]);
 
-  if (!user) return <p>User not authenticated</p>;
+  // Redirect to login if user is not authenticated and loading is complete
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login');
+    }
+  }, [user, loading, navigate]);
+
+  // Show a loading indicator while AuthContext is loading
+  if (loading) return <p>Loading...</p>;
+
+  if (!user) return null; // Prevent rendering if user data is not available
+
+  // Access roles from the custom claim in the token
+  const roles = user["https://sumit-gupta.com/roles"] || [];
+  const name = user.name || "User";
+  const email = user.email || "Not provided";
 
   return (
-    <div>
-      <h1>User Profile</h1>
-      <p><strong>Name:</strong> {user.nickname || user.name}</p>
-      <p><strong>Email:</strong> {user.email}</p>
-      {/* Display other fields from the decoded token if available */}
+    <div className="card">
+      <h2>Welcome to the Profile Page</h2>
+      <p><strong>Name:</strong> {name}</p>
+      <p><strong>Email:</strong> {email}</p>
+      <p><strong>Role:</strong> {roles.join(', ')}</p> {/* Display roles as comma-separated list */}
     </div>
   );
 }
