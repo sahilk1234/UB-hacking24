@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, session
-from auth import auth_required, auth0, init_auth0
+from auth0 import auth_required, auth0, init_auth0
 from db import mongo, init_db
-from symptoms import get_possible_conditions
+from symptom import get_possible_conditions
 from chatbot import get_diagnosis
 
 app = Flask(__name__)
