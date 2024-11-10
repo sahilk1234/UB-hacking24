@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, session, redirect, url_for
-from auth0 import auth_required, init_auth0, auth0  # Ensure auth0 is imported
+from auth0 import auth_required, init_auth0, auth0
 from db import mongo, init_db
 from symptom import get_possible_conditions
 from chatbot import get_diagnosis
@@ -10,7 +10,7 @@ app.config["MONGO_URI"] = "mongodb+srv://sgupta98mnit:O3T9ILZQZR4KW4V7@cluster0.
 
 # Initialize database and Auth0
 init_db(app)
-auth0 = init_auth0(app)  # This should initialize the global auth0 variable
+auth0 = init_auth0(app)
 
 # Routes
 @app.route('/symptom_checker', methods=['POST'])
@@ -30,7 +30,7 @@ def chatbot():
 @app.route('/user/profile', methods=['GET'])
 @auth_required
 def user_profile():
-    user = mongo.db.users.find_one({"user_id": session["user_id"]})
+    user = mongo.db.users.find_one({"user_id": session["user"]["sub"]})
     return jsonify(user) if user else jsonify({"error": "User not found"}), 404
 
 @app.route('/login')
@@ -39,9 +39,11 @@ def login():
 
 @app.route('/callback')
 def callback():
-    token = auth0.authorize_access_token()
-    session["user"] = token
-    return redirect("/")
+    token = auth0.authorize_access_token()  # Exchange authorization code for a token
+    session["user"] = token  # Store the token in session
+    
+    # Redirect to React frontend with token in URL or query params
+    return redirect("http://localhost:3000/profile?token=" + token['access_token'])
 
 if __name__ == "__main__":
     app.run(debug=True)
